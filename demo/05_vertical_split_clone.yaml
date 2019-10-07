@@ -1,0 +1,64 @@
+topology:
+  cells:
+    - name: "sakiladb"
+      etcd:
+        replicas: 3
+      vtctld:
+        replicas: 1
+      vtgate:
+        replicas: 3
+      mysqlProtocol:
+        enabled: true
+        authType: "none"
+      keyspaces:
+        - name: "sakila"
+          shards:
+            - name: "0"
+              tablets:
+                - type: "replica"
+                  vttablet:
+                    replicas: 2
+                - type: "rdonly"
+                  vttablet:
+                    replicas: 1
+        - name: "customer"
+          shards:
+            - name: "0"
+              tablets:
+                - type: "replica"
+                  vttablet:
+                    replicas: 2
+                - type: "rdonly"
+                  vttablet:
+                    replicas: 1
+jobs:
+  - name: "verticalsplitclone"
+    kind: "vtworker"
+    cell: "sakiladb"
+    command: "VerticalSplitClone -min_healthy_tablets=1 -tables=customer,payment,rental customer/0"
+
+etcd:
+  replicas: 3
+  resources:
+
+vtctld:
+  serviceType: "NodePort"
+  resources:
+
+vtgate:
+  serviceType: "NodePort"
+  resources:
+
+vttablet:
+  mysqlSize: "prod"
+  resources:
+  mysqlResources:
+
+vtworker:
+  resources:
+
+pmm:
+  enabled: false
+
+orchestrator:
+  enabled: false

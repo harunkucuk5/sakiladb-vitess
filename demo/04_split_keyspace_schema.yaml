@@ -1,0 +1,95 @@
+topology:
+  cells:
+    - name: "sakiladb"
+      etcd:
+        replicas: 3
+      vtctld:
+        replicas: 1
+      vtgate:
+        replicas: 3
+      mysqlProtocol:
+        enabled: true
+        authType: "none"
+      keyspaces:
+        - name: "sakila"
+          shards:
+            - name: "0"
+              tablets:
+                - type: "replica"
+                  vttablet:
+                    replicas: 2
+                - type: "rdonly"
+                  vttablet:
+                    replicas: 1
+          vscheme:
+            vsplit: |-
+               {
+                "tables": {
+                    "actor": {}, 
+                    "address": {}, 
+                    "category": {}, 
+                    "city": {}, 
+                    "country": {}, 
+                    "customer_list": {}, 
+                    "film": {}, 
+                    "film_actor": {}, 
+                    "film_category": {}, 
+                    "film_list": {}, 
+                    "film_text": {}, 
+                    "inventory": {}, 
+                    "language": {}, 
+                    "staff": {}, 
+                    "store": {}
+                }
+               }
+        - name: "customer"
+          shards:
+            - name: "0"
+              tablets:
+                - type: "replica"
+                  vttablet:
+                    replicas: 2
+                - type: "rdonly"
+                  vttablet:
+                    replicas: 1
+              copySchema:
+                source: "sakila/0"
+                tables:
+                  - "customer"
+                  - "payment"
+                  - "rental"
+          vschema:
+            vsplit: |-
+               {
+                "tables": {
+                   "customer": {},
+                   "payment": {},
+                   "rental": {}
+               }	
+                }
+
+etcd:
+  replicas: 3
+  resources:
+
+vtctld:
+  serviceType: "NodePort"
+  resources:
+
+vtgate:
+  serviceType: "NodePort"
+  resources:
+
+vttablet:
+  mysqlSize: "prod"
+  resources:
+  mysqlResources:
+
+vtworker:
+  resources:
+
+pmm:
+  enabled: false
+
+orchestrator:
+  enabled: false
